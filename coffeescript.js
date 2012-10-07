@@ -44,7 +44,6 @@ module.exports = function(hljs) {
     end: '\'',
     markBegin: true,
     markEnd: true,
-    illegal: '\\n',
     contains: [hljs.BACKSLASH_ESCAPE],
     relevance: 0
   }
@@ -89,12 +88,12 @@ module.exports = function(hljs) {
   }
   var REGEXP_OPERATORS = {
     className: 'regexp_operators',
-    begin: '\\(\\?:|\\(\\?!|\\*|\\+|\\^|\\?|\\$|\\(|\\)'
+    begin: '\\(\\?:|\\?=|\\(\\?!|\\*|\\+|\\^|\\?|\\$|\\(|\\)'
   }
   var REGEXP = {
     className: 'regexp',
-    begin: '/(?:[\\S])',
-    end: '/[gim]*\\b',
+    begin: '/[^\\s]',
+    end: '/[gim]*(\\b|[,.)]|$)',
     illegal: '\\n',
     returnBegin: true,
     markBegin: true,
@@ -116,7 +115,7 @@ module.exports = function(hljs) {
   var SUBST = {
     className: 'subst',
     begin: '#\\{',
-    end: '}',
+    end: '\\}',
     markBegin: true,
     markEnd: true,
     keywords: KEYWORDS,
