@@ -5,10 +5,11 @@ module.exports = function(hljs) {
     keyword:
       // JS keywords
       'in if for while finally new do return else break catch instanceof throw try this ' +
-      'switch continue typeof delete debugger super' +
+      'switch continue typeof delete debugger super ' +
       // Coffee keywords
       'then unless until loop of by when and or is isnt not extends',
     global: 'require console print module exports global window document',
+    top_level: 'isNaN parseInt parseFloat',
     literal:
       // JS literals
       'true false null undefined ' +
@@ -21,7 +22,7 @@ module.exports = function(hljs) {
   JS_CONSTANT_RE = '\\b[A-Z][0-9A-Za-z$_]*';
 
   /*
-    To have circular references between modes the modes are shadowed with
+    To have circular references between modes, the modes are shadowed with
     pre-defined objects that are populated at the end of the file.
 
     This array list the modes to shadow.
@@ -41,13 +42,53 @@ module.exports = function(hljs) {
     'PUNCTUATION',
     'HASH_KEY',
     'CONSTANT',
-    'PROPERTY'
+    'PROPERTY',
+    'GROUP'
   ]
+
   // Stores the shadow instances.
   SHADOWS = {};
   for(var i=0; i<SHADOWED.length; i++) SHADOWS[SHADOWED[i]] = {};
   // Stores the real instances.
   REALS = {};
+
+  NUMBER = {
+    className: 'number',
+    begin: hljs.C_NUMBER_RE + '\\s*(/)',
+    beginCaptures: {
+      '3': 'operators'
+    },
+    relevance: 0
+  }
+
+  CODE_CONTENT = [
+    // Numbers
+    NUMBER,
+    hljs.C_NUMBER_MODE,
+    // Strings
+    SHADOWS['HEREDOCS_DOUBLE'],
+    SHADOWS['HEREDOCS_SIMPLE'],
+    SHADOWS['SINGLE_QUOTE_STRING'],
+    SHADOWS['DOUBLE_QUOTE_STRING'],
+    // RegExps
+    SHADOWS['HEREREGEXP'],
+    SHADOWS['REGEXP'],
+    // Javascript
+    SHADOWS['EMBEDDED'],
+    // Entity
+    SHADOWS['GROUP'],
+    SHADOWS['FUNCTION'],
+    SHADOWS['CLASS'],
+    SHADOWS['HASH'],
+    SHADOWS['HASH_KEY'],
+    // Punctations
+    SHADOWS['OPERATORS'],
+    SHADOWS['PUNCTUATION'],
+    // Words
+    SHADOWS['CONSTANT'],
+    SHADOWS['PROPERTY']
+  ]
+
 
   PROPERTY = REALS['PROPERTY'] = {
     className: 'property',
@@ -63,7 +104,7 @@ module.exports = function(hljs) {
   }
   PUNCTUATION = REALS['PUNCTUATION'] = {
     className: 'punctuation',
-    begin: '\\$|\\(|:|\\)|\\[|\\]|\\.\\.|\\.\\.\\.'
+    begin: '\\$|:|\\[|\\]|\\.|,'
   }
   NO_INTERPOLATION = REALS['NO_INTERPOLATION'] = {
     className: 'string_quote',
@@ -139,12 +180,11 @@ module.exports = function(hljs) {
   }
   REGEXP = REALS['REGEXP'] = {
     className: 'regexp',
-    begin: '/[^\\s]',
-    end: '/[gim]*(\\b|[,.)]|$)',
+    begin: '/([^\\s]).*/[gim]*([,.)\\}\\]]|$)',
+    end: '/[gim]*([,.)\\}\\]]|$)',
     illegal: '\\n',
-    returnBegin: true,
-    markBegin: true,
-    markEnd: true,
+    returnBeginCapture: 1,
+    returnEndCapture: 1,
     contains: [
       REGEXP_CHAR_GROUP,
       hljs.BACKSLASH_ESCAPE,
@@ -152,12 +192,23 @@ module.exports = function(hljs) {
       REGEXP_OPERATORS
     ]
   }
+  GROUP = REALS['GROUP'] = {
+    className: 'group',
+    begin: '\\(',
+    end: '\\)',
+    markBegin: true,
+    markEnd: true,
+    contains: CODE_CONTENT,
+    keywords: KEYWORDS
+  }
   HASH_KEY = REALS['HASH_KEY'] = {
     className: 'property',
     begin: '@?' + JS_IDENT_RE+'\\s*:',
     returnBegin: true,
     end: ':',
-    markEnd: true
+    endCaptures: {
+      '0' : 'punctuation'
+    }
   }
   SUBST = REALS['SUBST'] = {
     className: 'subst',
@@ -166,32 +217,7 @@ module.exports = function(hljs) {
     markBegin: true,
     markEnd: true,
     keywords: KEYWORDS,
-    contains: [
-      // Numbers
-      hljs.BINARY_NUMBER_MODE,
-      hljs.C_NUMBER_MODE,
-      // Strings
-      SHADOWS['HEREDOCS_DOUBLE'],
-      SHADOWS['HEREDOCS_SIMPLE'],
-      SHADOWS['SINGLE_QUOTE_STRING'],
-      SHADOWS['DOUBLE_QUOTE_STRING'],
-      // RegExps
-      SHADOWS['HEREREGEXP'],
-      SHADOWS['REGEXP'],
-      // Javascript
-      SHADOWS['EMBEDDED'],
-      // Entity
-      SHADOWS['FUNCTION'],
-      SHADOWS['CLASS'],
-      SHADOWS['HASH'],
-      SHADOWS['HASH_KEY'],
-      // Punctations
-      SHADOWS['OPERATORS'],
-      SHADOWS['PUNCTUATION'],
-      // Words
-      SHADOWS['CONSTANT'],
-      SHADOWS['PROPERTY']
-    ]
+    contains: CODE_CONTENT
   }
   HEREDOCS_DOUBLE = REALS['HEREDOCS_DOUBLE'] = {
     className: 'heredocs',
@@ -222,12 +248,8 @@ module.exports = function(hljs) {
     end: '\\}',
     markBegin: true,
     markEnd: true,
-    contains: [
-      HASH_KEY,
-      DOUBLE_QUOTE_STRING,
-      SINGLE_QUOTE_STRING,
-      hljs.C_NUMBER_MODE
-    ]
+    keywords: KEYWORDS,
+    contains: CODE_CONTENT
   }
 
   HEREREGEXP = REALS['HEREREGEXP'] = {
@@ -247,45 +269,23 @@ module.exports = function(hljs) {
   }
   COMMENTS = REALS['COMMENTS'] = {
     className: 'comment',
-    begin: '###',
+    begin: '###(?!#)',
     end: '###',
     markBegin: true,
     markEnd: true
   }
   FUNCTION = REALS['FUNCTION'] = {
     className: 'function',
-    begin: '(\\([^)]+\\))?\\s*[-=]>',
-    returnBegin: true,
-    end: '>',
-    keywords: KEYWORDS,
-    contains: [
-      {
-        className: 'params',
-        begin: '\\(',
-        end: '\\)',
-        markBegin: true,
-        markEnd: true,
-        contains: [
-          HEREDOCS_SIMPLE,
-          HEREDOCS_DOUBLE,
-          SINGLE_QUOTE_STRING,
-          DOUBLE_QUOTE_STRING,
-          HEREREGEXP,
-          REGEXP,
-          OPERATORS,
-          CONSTANT,
-          PROPERTY
-        ]
-      }
-    ]
+    begin: '[-=]>',
   }
   CLASS = REALS['CLASS'] = {
     className: 'class',
     beginWithKeyword: true,
     keywords: 'class',
-    markBegin: true,
-    markEnd: true,
-    end: '\\s*' + JS_IDENT_RE
+    end: '\\s*(' + JS_IDENT_RE + ')',
+    endCaptures: {
+      '1': 'title'
+    }
   }
 
   // Here the shadowing is perfected, content of shadowed modes
@@ -301,7 +301,7 @@ module.exports = function(hljs) {
     keywords: KEYWORDS,
     contains: [
       // Numbers
-      hljs.BINARY_NUMBER_MODE,
+      NUMBER,
       hljs.C_NUMBER_MODE,
       // Strings
       HEREDOCS_DOUBLE,
@@ -317,6 +317,7 @@ module.exports = function(hljs) {
       COMMENTS,
       hljs.HASH_COMMENT_MODE,
       // Entity
+      GROUP,
       FUNCTION,
       CLASS,
       HASH,
