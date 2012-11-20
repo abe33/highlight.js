@@ -9,7 +9,7 @@ module.exports = function(hljs) {
       // Coffee keywords
       'then unless until loop of by when and or is isnt not extends',
     global: 'require console print module exports global window document',
-    top_level: 'isNaN parseInt parseFloat',
+    top_level: 'decodeURI ecodeURIComponent encodeURI encodeURIComponent escape eval isFinite isNaN Number parseFloat parseInt String unescape',
     literal:
       // JS literals
       'true false null undefined ' +
