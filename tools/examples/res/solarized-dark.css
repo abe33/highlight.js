@@ -1,0 +1,89 @@
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background-color: #042029;
+}
+pre {
+  width: 640px;
+  margin: 80px auto;
+  padding: 20px 40px;
+  border-left: 1px solid #1B333A;
+  border-right: 1px solid #1B333A;
+  background-color: #042029;
+  color: #93a1a1;
+}
+h1 {
+  color: #93a1a1;
+  text-align: center;
+
+}
+.keyword,
+.operators,
+.punctuation,
+.hash_begin,
+.hash_end,
+.function,
+.params_begin,
+.params_end,
+.property_end,
+.class,
+.group_begin,
+.group_end {
+  color: #859900;
+}
+.params,
+.subst,
+.hash,
+.text {
+  color: #93a1a1;
+}
+.string,
+.heredocs {
+  color: #2aa198;
+}
+.string_begin,
+.string_end,
+.heredocs_begin,
+.heredocs_end,
+.embedded_begin,
+.embedded_end {
+  color: #c60000;
+}
+.number {
+  color: #099;
+}
+.literal,
+.top_level,
+.constant,
+.char_range_begin,
+.char_range_end,
+.range_begin,
+.range_end,
+.regexp_operators {
+  color: #b58900;
+}
+.title,
+.property,
+.class_end {
+  color: #268bd2;
+}
+.regexp,
+.hereregexp {
+  color: #f00;
+}
+.comment,
+.embedded,
+.string_quote {
+  color: #586e75;
+}
+.global,
+.escaped,
+.subst_begin,
+.subst_end,
+.char_range {
+  color: #cb4b16;
+}
+.char_range > .escaped {
+  color: #d33682;
+}
